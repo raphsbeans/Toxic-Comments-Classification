@@ -52,7 +52,7 @@ def get_dataset(fix_length=100, lower=False, vectors=None):
         fix_length=fix_length,
         tokenize=tokenizer,
         pad_first=True,
-        dtype=torch.cuda.LongTensor,
+        dtype=torch.long,
         lower=lower
     )
     LOGGER.debug("Reading train csv file...")
@@ -63,17 +63,17 @@ def get_dataset(fix_length=100, lower=False, vectors=None):
             ('id', None),
             ('comment_text', comment),
             ('toxic', data.Field(
-                use_vocab=False, sequential=False, dtype=torch.cuda.ByteTensor)),
+                use_vocab=False, sequential=False, dtype=torch.uint8)),
             ('severe_toxic', data.Field(
-                use_vocab=False, sequential=False, dtype=torch.cuda.ByteTensor)),
+                use_vocab=False, sequential=False, dtype=torch.uint8)),
             ('obscene', data.Field(
-                use_vocab=False, sequential=False, dtype=torch.cuda.ByteTensor)),
+                use_vocab=False, sequential=False, dtype=torch.uint8)),
             ('threat', data.Field(
-                use_vocab=False, sequential=False, dtype=torch.cuda.ByteTensor)),
+                use_vocab=False, sequential=False, dtype=torch.uint8)),
             ('insult', data.Field(
-                use_vocab=False, sequential=False, dtype=torch.cuda.ByteTensor)),
+                use_vocab=False, sequential=False, dtype=torch.uint8)),
             ('identity_hate', data.Field(
-                use_vocab=False, sequential=False, dtype=torch.cuda.ByteTensor)),
+                use_vocab=False, sequential=False, dtype=torch.uint8)),
         ])
     LOGGER.debug("Reading test csv file...")
     test = data.TabularDataset(
@@ -95,8 +95,23 @@ def get_dataset(fix_length=100, lower=False, vectors=None):
 
 def get_iterator(dataset, batch_size, train=True, shuffle=True, repeat=False):
     dataset_iter = data.Iterator(
-        dataset, batch_size=batch_size, device=0,
+        dataset, batch_size=batch_size, device=torch.device('cuda:0'),
         train=train, shuffle=shuffle, repeat=repeat,
         sort=False
     )
     return dataset_iter
+
+class BatchGenerator:
+    def __init__(self, dl):
+        self.dl = dl
+        self.target_fields = ['toxic','severe_toxic','obscene','threat','insult','identity_hate']
+        self.data_field = 'comment_text'
+        
+    def __len__(self):
+        return len(self.dl)
+    
+    def __iter__(self):
+        for batch in self.dl:
+            X = getattr(batch, self.data_field)
+            Y = torch.transpose(torch.stack([getattr(batch, t) for t in self.target_fields]), 0, 1)
+            yield (X, Y)
