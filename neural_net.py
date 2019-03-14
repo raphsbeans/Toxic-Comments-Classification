@@ -59,7 +59,6 @@ class CoolNameNet(nn.Module):
                 metric_value = metric(np.vstack(all_targets), np.vstack(all_preds))
                 return running_loss / len(data_generator), metric_value
 
-import time
 
 def train(model, data_train, optimizer, loss_func, metric, data_val=None, batch_size=32, n_epochs=10, evaluate=True):
     def progress_bar(rate, total=30):
