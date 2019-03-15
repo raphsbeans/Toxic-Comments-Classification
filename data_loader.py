@@ -36,8 +36,11 @@ def prepare_csv(seed=999):
         "cache/dataset_train.csv", index=False)
     df_train.iloc[idx[:val_size], :].to_csv(
         "cache/dataset_val.csv", index=False)
-    df_test = pd.read_csv("data/test.csv")
-    df_test["comment_text"] = df_test.comment_text.str.replace("\n", " ")
+    
+    df_test = pd.merge(pd.read_csv("data/test.csv") , pd.read_csv("data/test_labels.csv"), on='id')
+    df_test = df_test.drop(df_test[(df_test['toxic'] < 0)].index)
+    df_test["comment_text"] = \
+        df_test.comment_text.str.replace("\n", " ")
     df_test.to_csv("cache/dataset_test.csv", index=False)
 
 
@@ -55,10 +58,10 @@ def get_dataset(fix_length=100, lower=False, vectors=None):
         dtype=torch.long,
         lower=lower
     )
-    LOGGER.debug("Reading train csv file...")
-    train, val = data.TabularDataset.splits(
+    LOGGER.debug("Reading csv files...")
+    train, val, test = data.TabularDataset.splits(
         path='cache/', format='csv', skip_header=True,
-        train='dataset_train.csv', validation='dataset_val.csv',
+        train='dataset_train.csv', validation='dataset_val.csv', test='dataset_test.csv',
         fields=[
             ('id', None),
             ('comment_text', comment),
@@ -74,13 +77,6 @@ def get_dataset(fix_length=100, lower=False, vectors=None):
                 use_vocab=False, sequential=False, dtype=torch.uint8)),
             ('identity_hate', data.Field(
                 use_vocab=False, sequential=False, dtype=torch.uint8)),
-        ])
-    LOGGER.debug("Reading test csv file...")
-    test = data.TabularDataset(
-        path='cache/dataset_test.csv', format='csv', skip_header=True,
-        fields=[
-            ('id', None),
-            ('comment_text', comment)
         ])
     LOGGER.debug("Building vocabulary...")
     comment.build_vocab(

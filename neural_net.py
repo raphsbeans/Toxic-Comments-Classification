@@ -60,6 +60,8 @@ class CoolNameNet(nn.Module):
                 return running_loss / len(data_generator), metric_value
 
 
+import time
+
 def train(model, data_train, optimizer, loss_func, metric, data_val=None, batch_size=32, n_epochs=10, evaluate=True):
     def progress_bar(rate, total=30):
         bar = '=' * int(total * rate)
@@ -116,10 +118,11 @@ def train(model, data_train, optimizer, loss_func, metric, data_val=None, batch_
         
         epoch_duration = time.time() - epoch_time
         avg_duration = (time.time() - start_time) / (epoch + 1)
+        print(' ' * 100, end='\r')
         print('Epoch {} - avg_time/epoch: {:.2f}s - epoch_duration {:.2f}s'.format(epoch, avg_duration, epoch_duration))
         
         if evaluate:
-            print('Evaluating the model on the validation set', end='\r')
+            print('Evaluating the model on the validation set...', end='\r')
             t_score = metric(np.vstack(all_targets), np.vstack(all_preds))
             train_scores.append(t_score)
             if not data_val is None:
