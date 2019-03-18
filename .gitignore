@@ -5,4 +5,8 @@
 __pycache__/
 glove/
 cache/
+<<<<<<< HEAD
 .git/
+=======
+
+>>>>>>> 2fb4e88b09798a41051583aa29b20a54ff197aed
