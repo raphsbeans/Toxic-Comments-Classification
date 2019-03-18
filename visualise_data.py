@@ -49,10 +49,6 @@ def plot_hist(size):
     
 def Size(df, minimal_len = 100):
     Size = np.array(list(map(len, df['comment_text'])))
-    plot_hist(Size)
-    
-    
+    plot_hist(Size)    
     print("The mean size of the sentences is %.1f" %( Size.mean()))
-    
-
     print ("For a minimal lenght of %d, the quantity of sentences with less words is %.2f%%" % (minimal_len, sum(Size<minimal_len )/df['toxic'].count()*100))
