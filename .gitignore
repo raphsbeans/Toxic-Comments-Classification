@@ -1,8 +1,0 @@
-toxic_comment_notebook.ipynb
-.vscode/
-.vector_cache/
-.ipynb_checkpoints/
-__pycache__/
-cache/
-data/
-glove/
