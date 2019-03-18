@@ -2,10 +2,8 @@ import torch
 import time
 import numpy as np
 import torch.optim as optim
-
+import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score
-from models import CoolNameNet
-from data_loader import get_dataset, get_iterator, BatchGenerator
 
 
 def evaluate(model, data_generator, loss_func, metric):
@@ -106,32 +104,19 @@ def train(model, data_train, optimizer, loss_func, metric, data_val=None, n_epoc
         return train_losses
 
 
-if __name__ == '__main__': 
-
-    # First model -----------------------------------------------------------------------
-
-    BATCH_SIZE = 32
-    EMBEDDING_DIM = 100
-
-    start_time = time.time()
-    print('Loading dataset...', end='\r')
-    print(' ' * 100, end='\r')
-    train, val, test = get_dataset(vectors='glove.twitter.27B.100d')
-    vocab = train.fields['comment_text'].vocab
-    vectors = vocab.vectors.cuda()
-    print('Dataset loaded - {:.2}s'.format(time.time() - start_time))    
+def plot_result(results):
+    plt.title('Loss Function')
+    plt.plot(results[2], label='val')
+    plt.plot(results[0], label='train')
+    plt.legend()
+    plt.show()
     
-    train_itr = BatchGenerator(get_iterator(train, BATCH_SIZE, train=True))
-    val_itr = BatchGenerator(get_iterator(val, 256))
-    test_itr = BatchGenerator(get_iterator(test, 256))
-
-    model = CoolNameNet(len(vocab), EMBEDDING_DIM, 50, vectors=vectors, fine_tuning=False).cuda()
-    out = model(torch.zeros((100, 32), dtype=torch.long).cuda())
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    loss_func = torch.nn.BCELoss()
-
-    results = model.train()
+    plt.title('ROC_AUC Score')
+    plt.plot(results[3], label='val')
+    plt.plot(results[1], label='train')
+    plt.legend()
+    plt.show()
 
 
-
-    # Second model -----------------------------------------------------------------------------
+if __name__ == '__main__': 
+    pass

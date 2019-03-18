@@ -8,7 +8,7 @@ from torchtext import data
 
 MAX_CHARS = 20000
 NLP = spacy.load('en')
-def tokenizer(comment):
+def my_tokenizer(comment):
     comment = re.sub(
         r"[\*\"“”\n\\…\+\-\/\=\(\)‘•:\[\]\|’\!;]", " ", str(comment))
     comment = re.sub(r"[ ]+", " ", comment)
@@ -18,6 +18,19 @@ def tokenizer(comment):
     if (len(comment) > MAX_CHARS):
         comment = comment[:MAX_CHARS]
     return [x.text for x in NLP.tokenizer(comment) if x.text != " "]
+
+
+def comment_to_tensor(comment, tokenizer, vocab, cuda=True):
+    tokens = tokenizer(comment)
+    comment_tensor = torch.zeros(len(tokens), dtype=torch.long)
+    for i, t in enumerate(tokens):
+        comment_tensor[i] = vocab.stoi[t.lower()]
+    
+    comment_tensor = comment_tensor.view(-1, 1)
+    if cuda:
+        comment_tensor = comment_tensor.cuda()
+        
+    return comment_tensor
 
 
 class BatchGenerator:
@@ -38,7 +51,7 @@ class BatchGenerator:
 
 class ToxicLoader():
 
-    def __init__(self, root, tokenizer, vectors=None, fix_length=100, val_ratio=0.2, max_vocab=20000, min_freq=50, lower=False):
+    def __init__(self, tokenizer=my_tokenizer, root='.', vectors=None, fix_length=100, val_ratio=0.2, max_vocab=20000, min_freq=50, lower=False):
         self.val_ratio = val_ratio
         self.root = pathlib.Path(root)
         self.tokenizer = tokenizer
@@ -148,4 +161,29 @@ class ToxicLoader():
         if self.vectors is None:
             return None
         else:
-            return self.comment.vocab.vectors().cuda()
+            return self.comment.vocab.vectors.cuda()
+        
+    def generate_submission(self, model, filename='submission.csv'):
+        data_fields = [('id', None), ('comment_text', self.comment)]
+
+        test_dataset = data.TabularDataset(path = self.root/'data'/'test.csv', format='csv', fields=data_fields, skip_header=True)
+        test_itr = data.Iterator(test_dataset, batch_size=32, 
+                                 device=torch.device('cuda:0'), 
+                                 sort=False, sort_within_batch=False, 
+                                 repeat=False, shuffle=False)
+
+        df_test = pd.read_csv(self.root / 'data' / 'test.csv')
+
+        predictions = []
+        with torch.no_grad():
+            for batch in test_itr:
+                inputs = getattr(batch, 'comment_text')
+                probs = model(inputs)
+                predictions.append(probs.cpu())
+                
+        all_predictions = np.vstack(predictions)
+        for i, col in enumerate(["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]):
+            df_test[col] = all_predictions[:, i]
+        
+        pathlib.Path(self.root / 'cache').mkdir(parents=True, exist_ok=True)
+        df_test.drop('comment_text', axis=1).to_csv(self.root / 'cache' / filename, index=False)
