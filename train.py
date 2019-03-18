@@ -23,7 +23,7 @@ def evaluate(model, data_generator, loss_func, metric):
             return running_loss / len(data_generator), metric_value
 
 
-def train(model, data_train, optimizer, loss_func, metric, data_val=None, n_epochs=10, evaluation=True):
+def train(model, data_train, optimizer, loss_func, metric, data_val=None, n_epochs=10, evaluation=True, loss_period=100):
     def progress_bar(rate, total=30):
         bar = '=' * int(total * rate)
         if int(total * rate) < total:
@@ -41,16 +41,18 @@ def train(model, data_train, optimizer, loss_func, metric, data_val=None, n_epoc
         train_scores = []
     
     start_time = time.time()
+    running_loss = 0 # total loss since last append
+    total_batchs = 0 # total number of batch 
     for epoch in range(n_epochs):        
-        epoch_time = time.time()
-        running_loss = 0
+        epoch_time = time.time()        
 
         if evaluation:
             all_preds = []
             all_targets = []
 
-        counter = 0
+        counter = 0 #number of batchs in this epoch
         for inputs, targets in data_train:
+            total_batchs += 1
             counter += 1
             if counter % 10 == 0:
                 print('Epoch {} - status: {:.2f}% {}, elapsed time: {:.2f}s'.format(epoch, 
@@ -73,10 +75,12 @@ def train(model, data_train, optimizer, loss_func, metric, data_val=None, n_epoc
             if evaluation:
                 all_preds.append(predictions.detach().cpu().numpy())
                 all_targets.append(targets.detach().cpu().numpy())
-        
-        running_loss = running_loss / len(data_train)
-        train_losses.append(running_loss)
-        
+
+            if total_batchs % loss_period:
+                running_loss = running_loss / loss_period
+                train_losses.append(running_loss)
+                running_loss = 0
+                
         epoch_duration = time.time() - epoch_time
         avg_duration = (time.time() - start_time) / (epoch + 1)
         print(' ' * 100, end='\r')
