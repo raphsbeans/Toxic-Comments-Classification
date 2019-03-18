@@ -2,7 +2,7 @@ toxic_comment_notebook.ipynb
 .vscode/
 .vector_cache/
 .ipynb_checkpoints/
-_pycache_/
+__pycache__/
 cache/
 data/
 glove/
