@@ -4,7 +4,7 @@ import numpy as np
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score
-
+import utils
 
 def evaluate(model, data_generator, loss_func, metric):
     with torch.no_grad():
@@ -23,6 +23,8 @@ def evaluate(model, data_generator, loss_func, metric):
             return running_loss / len(data_generator), metric_value
 
 
+import warnings
+warnings.simplefilter("ignore", UserWarning)
 def train(model, data_train, optimizer, loss_func, metric, data_val=None, n_epochs=10, evaluation=True):
     def progress_bar(rate, total=30):
         bar = '=' * int(total * rate)
@@ -41,7 +43,8 @@ def train(model, data_train, optimizer, loss_func, metric, data_val=None, n_epoc
         train_scores = []
     
     start_time = time.time()
-    for epoch in range(n_epochs):        
+    best_score = 0
+    for epoch in range(n_epochs):
         epoch_time = time.time()
         running_loss = 0
 
@@ -91,10 +94,15 @@ def train(model, data_train, optimizer, loss_func, metric, data_val=None, n_epoc
                 val_avg_losses.append(avg_loss)
                 val_scores.append(v_score)
             
-            print('    Train Loss: {:.3f}, Train Score {:.3f}, Val. Loss: {:.3f}, Val. Score: {:.3f}'.format(running_loss, 
+                print('    Train Loss: {:.3f}, Train Score {:.3f}, Val. Loss: {:.3f}, Val. Score: {:.3f}'.format(running_loss, 
                                                                                                              t_score, 
                                                                                                              avg_loss,
                                                                                                              v_score))
+                if v_score > best_score:
+                    best_score = v_score
+                    utils.save_model(model, name=model.__class__.__name__)
+                    print('    Saved Model as ' + '<<' + model.__class__.__name__ + '.txt>>.')
+            
         else:
             print('    Train Loss: {:.2f}'.format(running_loss))
     

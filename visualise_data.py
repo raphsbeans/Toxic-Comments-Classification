@@ -8,7 +8,8 @@ Created on Mon Mar 18 23:14:36 2019
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from collections import Counter 
+from collections import Counter
+import json
 
 def first_view(df):
     print(df.head())
@@ -52,3 +53,29 @@ def Size(df, minimal_len = 100):
     plot_hist(Size)    
     print("The mean size of the sentences is %.1f" %( Size.mean()))
     print ("For a minimal lenght of %d, the quantity of sentences with less words is %.2f%%" % (minimal_len, sum(Size<minimal_len )/df['toxic'].count()*100))
+
+
+def gen_visualization(words_list, att_vec, file=None):
+    '''
+    words_list: list of words of length n.
+    att_vec: array of shape (n, 1)
+
+    Example:
+    words = ['test', 'test', 'test']
+    x = [[0.3], [0.1], [0.6]]
+    _ = gen_visualization(words, x, file='attn_vis-master/attn_vis_data.json')
+    '''
+    obj = {
+        'article_lst': [],
+        'p_gens': att_vec,
+        'decoded_lst': words_list,
+        'abstract_str': '',
+        'attn_dists': [[]]
+    }
+    
+    if not file is None:
+        with open(file, 'w') as outfile:
+            json.dump(obj, outfile)
+        
+    return json.dumps(obj)
+
