@@ -1,3 +1,5 @@
+import torch
+
 def save_model(model, name, PATH='saved_models/'):
     '''
     This function will save your model, with a given name

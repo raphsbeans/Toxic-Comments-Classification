@@ -20,11 +20,23 @@ def my_tokenizer(comment):
     return [x.text for x in NLP.tokenizer(comment) if x.text != " "]
 
 
-def comment_to_tensor(comment, tokenizer, vocab, cuda=True):
+def comment_to_tensor(comment, tokenizer, vocab, cuda=True, fix_length=None):
     tokens = tokenizer(comment)
-    comment_tensor = torch.zeros(len(tokens), dtype=torch.long)
-    for i, t in enumerate(tokens):
+    if fix is None:
+        fix_length = len(tokens)
+        
+    comment_tensor = torch.zeros(fix_length, dtype=torch.long)
+    i = 0
+    for t in tokens:
+        i += 1
+        if i > fix_length:
+            break
+        
         comment_tensor[i] = vocab.stoi[t.lower()]
+    
+    if i < fix_length:
+        for j in range(i, fix_length):
+            comment_tensor[i] = vocab.stoi['<pad>']
     
     comment_tensor = comment_tensor.view(-1, 1)
     if cuda:
