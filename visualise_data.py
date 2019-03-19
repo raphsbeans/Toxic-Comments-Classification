@@ -57,7 +57,7 @@ def Size(df, minimal_len = 100):
     print("The mean size of the sentences is %.1f" %( Size.mean()))
     print ("For a minimal lenght of %d, the quantity of sentences with less words is %.2f%%" % (minimal_len, sum(Size<minimal_len )/df['toxic'].count()*100))
 
-def gen_visualization(words_list, att_vec, file=None):
+def gen_visualisation(words_list, att_vec, file=None):
     '''
     words_list: list of words of length n.
     att_vec: array of shape (n, 1)
