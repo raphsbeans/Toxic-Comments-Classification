@@ -20,18 +20,32 @@ def my_tokenizer(comment):
     return [x.text for x in NLP.tokenizer(comment) if x.text != " "]
 
 
-def comment_to_tensor(comment, tokenizer, vocab, cuda=True):
+def comment_to_tensor(comment, tokenizer, vocab, cuda=True, fix_length=None):
     tokens = tokenizer(comment)
-    comment_tensor = torch.zeros(len(tokens), dtype=torch.long)
-    for i, t in enumerate(tokens):
-        comment_tensor[i] = vocab.stoi[t.lower()]
+    if fix_length is None:
+        fix_length = len(tokens)
+        
+    comment_tensor = torch.zeros(fix_length, dtype=torch.long)
     
+    if len(tokens) < fix_length:
+        for j in range(0, fix_length-len(tokens)):
+            comment_tensor[j] = 1
+        for j in range(fix_length-len(tokens), fix_length):
+            comment_tensor[j] = vocab.stoi[tokens[j - fix_length + len(tokens)].lower()]
+    
+    else:
+        i=0
+        for t in tokens:
+            i += 1
+            if i > fix_length:
+                break
+            comment_tensor[i] = vocab.stoi[t.lower()]
+
     comment_tensor = comment_tensor.view(-1, 1)
     if cuda:
         comment_tensor = comment_tensor.cuda()
         
     return comment_tensor
-
 
 class BatchGenerator:
     def __init__(self, dl):
