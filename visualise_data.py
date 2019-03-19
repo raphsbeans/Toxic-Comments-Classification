@@ -15,8 +15,8 @@ def first_view(df):
     print(df.head())
     print(df.info())
     
-def k_most_common(df_train, k):
-    A = list(df_train['comment_text'])
+def k_most_common(df, k):
+    A = list(df['comment_text'])
     A = str(A)
     Count = Counter( A.split())
     most_occur = Count.most_common(k) 
@@ -46,6 +46,9 @@ def Plot_quantity (df, total = True):
 def plot_hist(size):
     size = [v for v in size if v <= 1000]
     plt.hist(size,bins=30)
+    plt.xlabel('words length')
+    plt.ylabel('quantity')
+    plt.title('Data histogram')
     plt.show()
     
 def Size(df, minimal_len = 100):
@@ -53,7 +56,6 @@ def Size(df, minimal_len = 100):
     plot_hist(Size)    
     print("The mean size of the sentences is %.1f" %( Size.mean()))
     print ("For a minimal lenght of %d, the quantity of sentences with less words is %.2f%%" % (minimal_len, sum(Size<minimal_len )/df['toxic'].count()*100))
-
 
 def gen_visualization(words_list, att_vec, file=None):
     '''
