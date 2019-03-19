@@ -5,22 +5,19 @@ import torch.optim as optim
 import numpy as np
 
 class CoolNameNet(nn.Module):
-    def __init__(self, vocab_size, emb_dim, hidden_size, vectors=None, fine_tuning=True):
+    def __init__(self, vocab_size, emb_dim, hidden_size, vectors=None, freeze=True):
         super(CoolNameNet, self).__init__()
         self.hidden_size = hidden_size
         
         if not vectors is None:
-            self.embeddings = nn.Embedding.from_pretrained(vectors)
+            self.embeddings = nn.Embedding.from_pretrained(vectors, freeze=freeze)
         else:
             self.embeddings = nn.Embedding(vocab_size, emb_dim)
-            
-        if not fine_tuning:
-            self.embeddings.weight.require_grad = False
-        
+                    
         # just some basic rnn to test the data_iterators
         self.lstm = nn.LSTM(emb_dim, hidden_size, num_layers=2, bidirectional=True, dropout=0.1)
         
-        self.linear1 = nn.Linear(emb_dim, hidden_size)
+        self.linear1 = nn.Linear(2 * hidden_size, hidden_size)
         self.linear2 = nn.Linear(hidden_size, 6)
         
     def init_hidden(self, batch_size):
