@@ -1,4 +1,3 @@
-*.ipynb
 .vscode/
 .vector_cache/
 .ipynb_checkpoints/
